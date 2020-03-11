@@ -1,0 +1,128 @@
+---
+title: "PSYC501_Lab#5_RMD"
+author: "Qianhui Ni"
+date: "10/12/2019"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,eval = TRUE)
+```
+&nbsp;  
+
+# Introduction
+
+**This is Qianhui's assignment for PSYC501 Lab Section #5.**  
+Name: **Qianhui Ni**  
+Lab Section Number:**52662**  
+USC Student ID:**00000**  
+  
+# Excercises
+## 1. Central Limit Theorem  
+(No function writing is required. The necessary function is provided)
+First download the SPSS data file hw.sav from Content on Blackboard, and import it using the appropriate function (you may need to install and load the library foreign. Name the imported dataset hw.)
+```{r E1}
+library(foreign)
+library(memisc)
+mydata <- spss.system.file("hw.sav")
+mydata <- Iconv(mydata,from="CP1251",to="UTF-8")
+hw <-as.data.frame(as.data.set(mydata))
+#hw <- read.spss("hw.sav",to.data.frame=TRUE)
+```
+&nbsp;  
+
+Here we will take a first look at the Central Limit Theorem (CLT), which dictates that when the sample size is sufficiently large, the sampling distribution of the mean approaches normal. 
+We will use a function called CLTplot()to check this theorem. This function plots two things: (i) a density plot for the sampling distribution of the mean, and (ii) a theoretical normal curve based on the population mean and the standard error. If the CLT holds, then the former curve should closely resemble the latter.  
+
+### 1).Copy and paste the following code into R  
+```{r E1a}
+CLTplot <- function( data, sam_size=20 ){
+  #Create 5000 samples, in the space below:
+  temp <- sample( data, 5000*sam_size, replace=TRUE )
+  mat  <- matrix(temp, ncol=5000 )
+  #Compute sample means below:
+  smeans <- colMeans( mat )
+  #Compute the population mean
+  popmean <- mean( data )             
+  #Compute the standard deviation of sample means, namely the SE.
+  SE <- sd( smeans )					                                              
+  #Density for smeans:                                      
+  dens.x <- density( smeans )$x                                   
+  dens.y <- density( smeans )$y
+  lo.bound <- popmean - 4*SE
+  hi.bound <- popmean + 4*SE
+  xlims <- range( dens.x, lo.bound, hi.bound ) #x limits
+  ylims <- range( dens.y )                     #y limits
+  #Create a density plot for smeans in the space below: 
+  plot(density(smeans), xlim=xlims, ylim=ylims, main=paste("Sample size =", 
+                                                           sam_size))
+  curve( dnorm(x, mean= popmean, sd=SE), 
+         add=TRUE, lty=3, from=lo.bound, to=hi.bound )
+  #Create a legend in the space below. 
+  legend("topright", c("Sampling dist. of mean", "normal curve"), lty=c(1,3),
+         bty="n")
+}
+```
+&nbsp;  
+
+### 2).Let’s load the library psych. 
+You may need to install it on your computer. After loading it, use the function describe() to compute descriptive statistics for the second and third columns (hint: use the table name along with square brackets and column indices). This function is similar to the Describe() function we created during lab last week, but with three additional statistics (mad median, skewness, and kurtosis) included (Now you know you’ve already written a pretty useful function!). It’s a good practice to always compute descriptive statistics for your samples before you start analyzing them to make sure nothing out of the ordinary is going on or if there are potential issues with your samples.  
+```{r E1b}
+library(psych)
+describe(hw)
+```
+&nbsp;  
+
+### 3).Then, use the function multi.hist() to plot histograms for the 2nd and 3r columns.   
+```{r E1c}
+multi.hist(hw[,2:3])
+```
+&nbsp;  
+&nbsp;  
+
+### 4).Let’s treat the column T1 in hw as our population data.
+Use CLTplot() to test whether the sampling distribution of the mean is approximately normally distributed when sam_size = 20.  If it is, the solid curve (representing the sampling distribution of the mean) should resemble dashed line (the theoretical normal curve). What do you observe?  
+```{r E1d}
+CLTplot(hw$t1)
+```
+### Ans: It can be observed that the sampling distribution of the mean looks like a normal distribution. The curve of the sampling distribution of the mean is closely resemble the curve of the population mean.  
+&nbsp;  
+
+### 5).Now, let’s use T2 to check the Central Limit Theorem. 
+```{r E1e}
+par(mfrow=c(2,3))
+CLTplot( hw$t2 )     #The sample size is 20 by default
+CLTplot( hw$t2, sam_size=50 )
+CLTplot( hw$t2, sam_size=100 )
+CLTplot( hw$t2, sam_size=200 )
+CLTplot( hw$t2, sam_size=500 )
+CLTplot( hw$t2, sam_size=1000 )
+```
+
+#### Try a couple of even larger sample sizes on your own
+```{r E1f}
+par(mfrow=c(2,2))
+CLTplot( hw$t2, sam_size=5000 )
+CLTplot( hw$t2, sam_size=10000 )
+CLTplot( hw$t2, sam_size=20000 )
+CLTplot( hw$t2, sam_size=80000 )
+```
+&nbsp;  
+
+## 2. Questions
+Along with the code used and output generated, your answers to the following questions need to be submitted as Lab 5 homework.  
+&nbsp;  
+
+### Question 1: 
+With which sample size, did you get a sampling distribution that approximated a normal distribution? If these were real data, would it be economical to collect the sample size needed in order to satisfy the CLT?  
+
+#### Answer: For my sample size of 5000, 10000, 20000 and 8000, the sampling distributions approximately look like normal distributed. In reality, it is not economical to collect so much data like that. We don't have enough time and resources to recruit such a large sample group.
+&nbsp;  
+
+### Question 2. 
+The CLT says that the sampling distribution of the mean will approach normality if the sample size is sufficiently big. Taking into consideration the results obtained earlier, what might be problematic about the phrase “sufficiently big”? (Hint 1: do we generally know the distribution of a population we are interested in? Hint 2: is it economical to increase the sample size in this case?)  
+
+#### Answer: Normally, when designing a new study, we don't know the distribution of a population we are interested in. So it is hard to decide how big is "sufficiently big". Moreover, although increasing the sample size could help us make the sampling distributions close to the real population distribution, we usually don't have enough time and resources to achieve that.  

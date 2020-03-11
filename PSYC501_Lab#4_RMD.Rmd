@@ -1,0 +1,132 @@
+---
+title: "PSYC501_Lab#4_RMD"
+author: "Qianhui Ni"
+date: "10/05/2019"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,eval = TRUE)
+```
+&nbsp;  
+
+# Introduction
+
+**This is Qianhui's assignment for PSYC501 Lab Section #4.**  
+Name: **Qianhui Ni**  
+Lab Section Number:**52662**  
+USC Student ID:**000000001**  
+  
+&nbsp;  
+
+# Writing My Functions  
+For this assignment, I would like you to write your own R functions to calculate:  
+1)	The mean  
+2)	The trimmed mean  
+3)	The median   
+&nbsp;  
+
+## 1). The mean  
+```{r E4mean}
+my.mean = function(x){
+  n <- length(x)
+  mean <- sum(x)/n
+  return(mean)
+}
+```
+&nbsp;  
+
+## 2). The median    
+```{r E4median}
+my.median = function(y){
+  n <- length(y)
+  sorted_y <- sort(y)
+  remainder <- n %% 2
+  if(remainder == 1){
+    median <- sorted_y[(n+1)/2]
+  }
+  else{
+    m1 <- sorted_y[n/2] + sorted_y[(n/2)+1]
+    median <- m1/2
+  }
+  return(median)
+}
+```
+&nbsp;  
+
+## 2). The trimmed mean    
+```{r E4tmean}
+my.tmean = function(z,trim = 0.2){
+  if( (trim<0) | (trim>=0.5) ){
+    tmean <- "Incorrect input! The value must be between 0 and 0.5."
+  }
+  else{
+    n <- length(z)
+    sorted_z <- sort(z)
+    g <- floor(trim*n)
+    location <- vector()
+    if(g!=0){
+      for(i in 1:n){
+        if( (i<=g) | (i>(n-g)) ){
+          location <- c(location,i)
+        }
+      }
+      new_z <- sorted_z[-location]
+      new_n <- length(new_z)
+      tmean <- sum(new_z)/new_n
+    }
+    else{
+      tmean <- sum(z)/n
+    }
+  }
+  return(tmean)
+}
+```
+&nbsp;  
+&nbsp;  
+
+# Test of  My Functions  
+```{r lib, include=FALSE}
+library(WRS)
+```
+## Generate Test Samples  
+```{r testexample}
+test1 <- rnorm(100)
+test2 <- rnorm(101)
+```
+## Test of my.mean  
+```{r t1}
+my.mean(test1)
+mean(test1)
+my.mean(test2)
+mean(test2)
+my.mean(test1) == mean(test1)
+my.mean(test2) == mean(test2)
+```
+
+## Test of my.median  
+```{r t2}
+my.median(test1)
+median(test1)
+my.median(test2)
+median(test2)
+my.median(test1) == median(test1)
+my.median(test2) == median(test2)
+```
+
+
+## Test of my.tmean 
+```{r t3}
+my.tmean(test1,0.2)
+tmean(test1,0.2)
+my.tmean(test2,0.1)
+tmean(test2,0.1)
+my.tmean(test1,0.2) == tmean(test1,0.2)
+my.tmean(test2,0.1) == tmean(test2,0.1)
+```
+
+&nbsp;  
+&nbsp;  

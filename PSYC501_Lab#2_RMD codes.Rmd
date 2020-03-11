@@ -1,0 +1,152 @@
+---
+title: "PSYC501_Lab#2_RMD"
+author: "Qianhui Ni"
+date: "9/11/2019"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,eval = TRUE)
+```
+&nbsp;  
+
+# Introduction
+
+**This is Qianhui's assignment for PSYC501 Lab Section #2.**  
+Name: **Qianhui Ni**  
+Lab Section Number:**52662**  
+USC Student ID:**0000000000**  
+&nbsp;  
+  
+# Excercises
+
+## Excercise 1  
+a). Generate ONE random value from a normal distribution with mean=5 and sd=2, and save it to an object named x.  
+b). Use pnorm(?, 5, 2) to find the probability p(X <= x)  
+c). Use qnorm(?, 0, 1) to find the standard normal quantile corresponding to the probability obtained in (b).  
+d). Use arithmetic operations in R to standardize the value x you generated in (a).  
+e). Is your answer in (c) same as that in (d)?  
+&nbsp;  
+
+### Excercise 1. a):
+```{r E1a}
+x <- rnorm(1,5,2)
+x
+```
+### Excercise 1. b):
+```{r E1b}
+e1_p <- pnorm(x, 5, 2)
+e1_p
+```
+### Excercise 1. c):
+```{r E1c}
+e1_q <- qnorm(e1_p, 0, 1)
+e1_q
+```
+### Excercise 1. d):
+```{r E1d}
+e1_sd_x <- (x-5)/2
+e1_sd_x
+```
+### Excercise 1. e):
+```{r E1e}
+e1_q == e1_sd_x
+```
+**Ans: Yes, they are the same.**  
+&nbsp;  
+\newpage  
+
+## Excercise 2  
+a). Download lab2.csv and import it as a table object named lab2.  
+b). Create a histogram for the reaction time (rt) data. To make your graph look more nuanced, play with the parameter br= to change the number of bins shown.  
+c). Is this set of data skewed? Positively or negatively?  
+d). Calculate the mean, median, and variance. Which statistic is larger: the mean or the median?  
+e). Draw two vertical lines: one to indicate where the mean is located and the other to indicate where the median is located. Use this function: abline(v=?).  
+&nbsp;  
+
+### Excercise 2. a):
+```{r E2a}
+setwd("/Users/qianhuini/Documents")
+e2_Data <- read.csv(file="lab2.csv", header=TRUE,sep = "")
+```
+### Excercise 2. b):
+```{r E2b}
+hist(e2_Data$rt, br = 100)
+```
+
+### Excercise 2. c):
+```{r E2c}
+library(moments)
+e2_skew <- skewness(e2_Data$rt)
+if (e2_skew[1] > 0){
+  print("The data is skewed positively")
+} else if (e2_skew[1] <0){
+  print("The data is skewed negatively")
+} else {
+  print("The data is not skewed")
+}
+```
+**Ans: The skewness of the simulated data is `r e2_skew[1]`. This concludes that the rt is shewed positively.**  
+
+### Excercise 2. d):
+```{r E2d}
+e2_mean <- mean(e2_Data$rt)
+e2_median <- median(e2_Data$rt)
+e2_variance <- var(e2_Data$rt)
+if (e2_mean > e2_median){
+  print("its mean is larger than itsmedian")
+} else if (e2_mean < e2_median){
+  print("its median is larger than its mean")
+} else {
+  print("its mean and median are the same")
+}
+```
+**Ans: Its mean is larger than itsmedian.**  
+
+### Excercise 2. e):
+```{r E2e}
+{hist(e2_Data$rt, br = 100)
+abline(v=e2_mean, col="red")
+abline(v=e2_median,col="blue")}
+```
+&nbsp;  
+
+## Excercise 3  
+a). Generate 50 values from a standard normal distribution and store them in a vector X1.
+b). Generate 50 values from a normal distribution with mean=0 & sd=20. Store them in a vector X2. 
+c). Combine the two vectors to form a new vector X. [hint: use the function c(...)]
+d). Plot the data in X using the function hist(X).
+e). Calculate the mean, median, variance and standard deviation of the data in X.
+f). Plot density graphs for the three distributions you generated in this exercise in one window.
+&nbsp;  
+
+### Excercise 3. a),b),c):
+```{r E3abc}
+X1 <- rnorm(50,0,1)
+X2 <- rnorm(50,0,20)
+X <- c(X1,X2)
+```
+### Excercise 3. d):
+```{r E3d}
+hist(X)
+```
+
+### Excercise 3. e):
+```{r E3e}
+e3_mean <- mean(X)
+e3_median <- median(X)
+e3_sd <- sd(X)
+```
+**Ans: For the data in X, its mean is `r e3_mean`, its median is `r e3_median`, its sd is `r e3_sd`.**   
+\newpage
+
+### Excercise 3. f):
+```{r E3f}
+par(mfrow=c(1,3))
+hist(X1,br=10,col="coral2")
+hist(X2,br=10,col="lightskyblue2")
+hist(X,br=10,col = "mediumpurple2")
+```

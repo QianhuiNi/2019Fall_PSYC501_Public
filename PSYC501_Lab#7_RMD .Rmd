@@ -1,0 +1,184 @@
+---
+title: "PSYC501_Lab#7_RMD"
+author: "Qianhui Ni"
+date: "10/26/2019"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,eval = TRUE)
+```
+&nbsp;  
+
+# Introduction
+
+**This is Qianhui's assignment for PSYC501 Lab Section #7.**  
+Name: **Qianhui Ni**  
+Lab Section Number:**52662**  
+USC Student ID:**0000000**  
+  
+# Excercises  
+
+## 2. Hypothesis Testing    
+#### Ans: If H0 is true but we reject h0, we make Type I error. If H0 is false but we fail to reject H0, we make Type II error.  
+&nbsp;  
+
+## 3. Confidence intervals when the population is unknown - Non-normality
+### Exercise 2:  
+
+### a.      
+```{r E2a}
+pop2 <- c(rnorm(9500), rnorm(500, sd=15))
+```
+&nbsp;  
+
+### b.    
+```{r E2b}
+mean(pop2)
+sd(pop2)
+hist(pop2)
+```
+&nbsp;  
+
+### c.   
+
+#### Ans: My guess is that the actual probability coverage will be equal to 90%.  
+&nbsp;  
+
+### d.   
+```{r E2d}
+t_stat <- function(x , sam_size, num_sam) {
+     temp <- sample(x , sam_size * num_sam , replace = TRUE)
+     mat <- matrix(temp , ncol=num_sam)
+     mu <- mean(x)           #Population mean  
+     xbar <- colMeans(mat) #sample means (compute the mean of each column)
+     s <- apply(mat , 2 , sd)
+     t <- (xbar - mu) / (s / sqrt(sam_size))   #Compute t-scores for all samples
+     return(t)
+}
+
+tplot <- function(t_statistics , conf.level = .95 , df) {
+  cols <- hcl(h = c(0, 240), l = 60, alpha = 0.3)
+  conf.hi <- 1 - (1 - conf.level) / 2
+  conf.lo <- 1 - conf.hi
+  dens.x <- density(t_statistics , n = 10000)$x
+  dens.y <- density(t_statistics , n = 10000)$y
+  n1 <- length(dens.x)
+  c.t.lo <- qt(conf.lo , df = df)
+  c.t.hi <- qt(conf.hi , df = df)
+  
+  plot(dens.x , 
+       dens.y , 
+       xlim = range(dens.x) , 
+       ylim = range(dens.y , dt(0 , df = df)) , 
+       type = "l" , 
+       lwd = 0.5 ,
+       main = paste("Distribution of t-statistics with df=" , df , sep = "") , 
+       xaxt = "n" ,
+       xlab = "")
+  
+  axis(1 , 
+       mgp = c(3 , 2.5 , 0) , #label location, tick mark labels, tick mark location
+       at = c(qt(conf.lo , df = df) , 0 , qt(conf.hi , df = df)) , 
+       c(paste("critical \n quantile" , "\n" , round(qt(conf.lo , df = df) , 3)) , 
+         0 , 
+         paste("critical \n quantile" , "\n" , round(qt(conf.hi , df = df) , 3))) ,
+       col = "red"  
+  )
+  
+  curve(dt(x , df = df) , 
+        from = qt(1e-05 , df = df) ,
+        to = qt(1-1e-05 , df = df) ,
+        add = TRUE , 
+        lwd = 1.5)
+  
+  dens.xt <- seq(c.t.lo , c.t.hi , (c.t.hi - c.t.lo) / 10000)
+  dens.yt <- dt(dens.xt , df = df)
+  n2 <- length(dens.xt)
+  t_statistics <- sort(t_statistics)
+  lo <- max(dens.x[dens.x < t_statistics[round(length(t_statistics) * conf.lo)]])
+  hi <- min(dens.x[dens.x > t_statistics[round(length(t_statistics) * conf.hi)]])
+  
+  polygon(x = c(dens.xt[1] , dens.xt , dens.xt[n2]) , 
+          y = c(0 , dens.yt , 0) , 
+          col = cols[1] , 
+          lwd = 0.5)
+  
+  polygon(x = c(lo , dens.x[which(dens.x == lo) : which(dens.x == hi)] , hi) ,
+          y = c(0 , dens.y[which(dens.x == lo) : which(dens.x == hi)] , 0) , 
+          col = cols[2] , 
+          lwd = 0.5)
+  
+  legend("topleft" , 
+         c(paste("Theoretic t-dist with df =" , df) , 
+           paste("t-dist based on data with df =" , df)) , 
+         pch = 22 , 
+         pt.cex = 2.5 , 
+         col = "black" , 
+         pt.bg = cols , 
+         bty = "n")
+  
+  actual_prob <- length(which(t_statistics >= qt(conf.lo , df = df) &
+                                t_statistics <= qt(conf.hi,df = df))) / length(t_statistics)
+  print(paste("The actual probability coverage:" , actual_prob))
+}
+
+tscores <- t_stat(pop2 , 20 , 5000)
+tplot(tscores,conf.level = 0.9 , df = 19)
+
+```
+&nbsp;  
+
+### e.   
+
+#### Ans: the result in step d does not support my prediction. The result shows the actual probability coverage is lower than 90%. This suggests that if the population is mixed normal, we may fail to reject H0 at certain confidential levels, even though H0 is false. That means we made a Type II error.  
+
+### Exercise 3:  
+ 
+### a.    
+```{r E3a}
+setwd("/Users/qianhuini/Documents")
+#sexm <- scan(file.choose())
+sexm <- scan(file="sexm.txt")
+```
+&nbsp;  
+
+### b.   
+```{r E3b}
+hist(sexm)
+mean(sexm)
+```
+&nbsp;  
+
+### c.    
+```{r E3c}
+tscoresSexm <- t_stat(sexm , 20 , 5000)
+tplot(tscoresSexm,conf.level = 0.9 , df = 19)
+```
+&nbsp;  
+
+### d.    
+
+#### Ans: The actual probability coverage is 0.1706.We may reject H0 at certain confidential levels, even though H0 is true. That means we made a Type I error.  
+
+### e.  
+```{r E3e}
+t_statistics2=t_stat(sexm,50, 5000)
+par(mfrow=c(2,2))
+tplot(t_statistics2,conf.level=.90, df=49)
+tplot(t_statistics2,conf.level=.90, df=99)
+tplot(t_statistics2,conf.level=.90, df=499)
+tplot(t_statistics2,conf.level=.90, df=1999)
+```
+&nbsp;  
+
+### f.     
+
+#### Ans: No, the actual probability coverage doesn't change when we increase the sample size. Even when the sample size is as large as 2000, the actual probability coverage is still 0.384. Thus it would be not economical to collect such a large sample.  
+&nbsp;  
+&nbsp;  
+&nbsp;  
+&nbsp;  

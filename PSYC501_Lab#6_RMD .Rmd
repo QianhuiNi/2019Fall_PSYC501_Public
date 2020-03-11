@@ -1,0 +1,141 @@
+---
+title: "PSYC501_Lab#6_RMD"
+author: "Qianhui Ni"
+date: "10/19/2019"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,eval = TRUE)
+```
+&nbsp;  
+
+# Introduction
+
+**This is Qianhui's assignment for PSYC501 Lab Section #6.**  
+Name: **Qianhui Ni**  
+Lab Section Number:**52662**  
+USC Student ID:**000000**  
+  
+# Excercises  
+
+## 1. Confidence Intervals when sigma is unknown – Part 1: Normality assumed  
+&nbsp;  
+
+### Exercise 1:  
+
+a. The critical quantile used to compute CI when sigma is known is derived from the standard normal distribution (z-distribution). When sigma is unknown, what distribution is the critical quantile derived from when computing CIs?    
+
+#### Ans: Student’s T distribution.  
+&nbsp;  
+
+b. Let’s familiarize ourselves with two useful R functions: pt(q, df) and qt(p, df) for the Student’s t-distribution. They are the Student’s t counterparts of pnorm(q, mean, sd) and qnorm(p, mean, sd). The first function, pt(q, df), computes the probability that T is less than or equal to a given quantile with the degrees of freedom df. The second function, qt(p, df), computes the quantile of Student’s t with degrees of freedom df given the probability.  
+i).  Calculate the probability that T is less than or equal to 1, with 10 degrees of freedom  
+ii). Calculate the .975 quantile with 10 degrees of freedom  
+```{r E1b}
+library(foreign)
+pt(1,10)
+qt(0.975,10)
+```
+
+\newpage
+
+c. Write down the formula for confidence interval when sigma is unknown.  
+
+#### Ans: the formula for confidence interval when sigma is unknown is CI = mean +/- c*(s/sqrt(n)).  
+&nbsp;  
+
+### Exercise 2:  
+
+a. Compute the critical quantile for 95% CI when sigma is unknown with df = 1 using qt()  
+```{r E2a}
+qt(0.95,1)
+```
+&nbsp;  
+
+b. Now, compute the critical quantile for 95% CI when sigma is known, using qnorm().  
+```{r E2b}
+qnorm(0.95)
+```
+
+c. Are the two critical quantiles obtained in the previous two steps identical? How does the critical quantile from step a differ from the one obtained in step b? How might this difference affect confidence intervals?   
+
+#### Ans: The two critical quantiles are different. In step a, qt() is to determine the 0.95 quantile with 1 degree of freedom based on Student's T distribution. The output means P(T <= 6.313752) = 0.95. While in step b, qnorm() is to find the Z-score of the pth quantile of the normal distribution. As for confidence intervals, if we use qt(), c in the formula is the 1-alpha/2 quantile of Student’s T distribution with n-1 degrees of freedom, the length of a confidence interval may be longer.   
+&nbsp;  
+
+d. Let’s redo step a, with different degrees of freedom: i). df =4; ii). df=14; iii). df=200.   
+```{r E2d}
+qt(0.95,4)
+qt(0.95,14)
+qt(0.95,200)
+```
+&nbsp;  
+
+e. How did the critical quantile change relative to your result in step b as you increased the df (namely the sample size)  
+
+#### Ans: The larger the df is, the closer the critical quantile to the critical quantile in step b.  
+&nbsp;  
+ 
+Questions: Look at the t-distribution with df=1, do approximately 95% of the t-statistics fall between the two cutoff points -1.96 and 1.96? If not, do more than 95% of values or less than 95% of values fall between them? If we use the critical quantile 1.96 to compute the CI when sigma is unknown, will the probability coverage of the CI be greater than, smaller than, or equal to 95%? How does the t-distribution change relative to the z distribution (standard normal dist.) as we increase the sample size?   
+
+#### Ans: No, approximately 95% of the t-statistics fall between -6.313752 and 6.313752. That means less than 95% of values fall between -1.96 and 1.96. If we use the critical quantile 1.96 to compute the CI when sigma is unknown, the probability coverage of the CI will be smaller than 95%. As the sample size increases, the t-distribution will look more and more like the z distribution.  
+&nbsp;  
+&nbsp;  
+
+## 2.Practice data manipulation/management  
+### Exercise 3:  
+Load the data set survey by using the code data(survey). If it did not load, install the package MASS using install.packages() and load the library. This dataset contains survey responses of students from Statistics I class at the University of Adelaide.  Note that there is no need to print the whole dataset. “survey” is the name of the data set. Therefore, to use the data set plug “survey” into functions (e.g., “head(survey)”  
+```{r E3}
+library(MASS)
+data(survey)
+head(survey)
+```
+&nbsp;  
+
+1). Practice some of the diagnostic tools discussed in lab 5. Check the following:  
+
+a. The type of variables you have (i.e., whether your variables are numeric or factors, etc)  
+   # use the function str()  
+```{r E31a}
+str(survey)
+```
+&nbsp;  
+
+b. Check the dimensions of the dataset.  
+```{r E31b}
+dim(survey)
+```
+&nbsp;  
+
+c. Each row corresponds to a unique participant, so the number of rows indicates the number of subjects. Now check the number of participants that had missing values (i.e., without complete cases).
+```{r E31c}
+missingValue_list <- unique(which(rowSums(is.na(survey))>0))
+missingValue_number <- length(missingValue_list)
+```
+#### Ans: the number of participants that had missing values is `r missingValue_number`.
+&nbsp;  
+
+2). Now extract the subset of the subjects that have no missing values and save these subjects data in a new object.  
+		# use: new.data= na.omit(survey)  
+```{r E32}
+new.data= na.omit(survey)
+dim(new.data)
+```
+&nbsp;  
+
+3). Compute the mean age of female participants who never smoke and are above 160 cm tall. In other words, compute the mean age of participants that meet all of the following criteria:  
+i. Female;  
+ii. Never smoked before  
+iii. Height > 160 cm 
+   #hint: use logical operators from lab 5 word document to separate those cases first, then take mean. 
+```{r E33}
+mydata1 = new.data[new.data$Sex == "Female", ]
+mydata2 = mydata1[mydata1$Smoke == "Never", ]
+mydata3 = mydata2[mydata2$Height > 160, ]
+meanAge <- mean(mydata3$Age)
+meanAge
+```
+#### Ans: the mean age of female participants who never smoke and are above 160 cm tall is `r meanAge`.  

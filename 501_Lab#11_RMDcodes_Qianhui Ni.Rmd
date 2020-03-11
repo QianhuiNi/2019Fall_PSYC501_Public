@@ -1,0 +1,95 @@
+---
+title: "PSYC501_Lab#11_RMD"
+author: "Qianhui Ni"
+date: "11/22/2019"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,eval = TRUE)
+```
+&nbsp;  
+
+# Introduction
+
+**This is Qianhui's assignment for PSYC501 Lab Section #11.**  
+Name: **Qianhui Ni**  
+Lab Section Number:**52662**  
+USC Student ID:**00000000000**  
+  
+# Excercises  
+## Exercise 1. Symmetric Bootstrap-t with Trimmed Means  
+ 
+```{r E1}
+library(psych)
+library(WRS)
+#Step1 
+lab11b <- read.table(file="lab11b.txt")
+lab11b <- unlist(lab11b)
+#Step2 
+xbart <- tmean(lab11b)
+xbart
+#Step3 
+resample <- function(data , sam_size , num_sam) {
+  mat <- matrix(nrow = sam_size , ncol = num_sam)
+  for(i in 1:num_sam) {
+    mat[ , i] <- sample(data , sam_size , replace = TRUE)
+  }
+  mat <- matrix(mat , nrow = sam_size , ncol = num_sam)
+}
+
+M1 <- resample(lab11b, length(lab11b) , 2000)
+#Step4
+results.11b <- apply(M1 , 2 , trimci , null.value = xbart , pr = F)
+#Step5
+stats.11b <- lapply(results.11b , "[[" , "test.stat")
+stats.11b <- unlist(stats.11b)
+head(stats.11b)
+class(stats.11b)
+#Step6
+stats.11b2 <- abs(stats.11b)
+#Step7
+t_stats <- sort(stats.11b2)
+```
+Step 8: In this step, we will make a statistical decision. 
+Method 1: Using the critical test statistic.
+```{r E1S8M1}
+c <- (1-0.05) * 2000
+Tstar <- t_stats[c]
+Tt <- abs((1 / trimse(lab11b)) * xbart)
+Tstar < Tt
+```
+## The value for T*t(c) is `r Tstar`.    
+
+## Because Tt is larger that Tstar, we reject the null hypothesis.  
+&nbsp;  
+Method 2: Using the confidence interval for symmetric bootstrap-t.  
+```{r E1S8M2}
+CI_down <- xbart - Tstar*trimse(lab11b)
+CI_up <- xbart + Tstar*trimse(lab11b)
+0 > CI_down
+0 < CI_up
+```
+## Ans: The CI is (`r CI_down`,`r CI_up`).
+## The null value is not within the CI, so we reject the null hypothesis.  
+&nbsp;  
+Of course, we can use the function trimcibt() to do this conveniently. Does the result resemble that you obtained earlier?   
+```{r E1S8M21}
+trimcibt(lab11b, tr=0.2, alpha=0.05, nboot=2000, side=TRUE)
+```
+## The null value is within the CI so we cannot reject the null hypothesis. The result does not resemble the earlier one.
+&nbsp;  
+
+## Exercise 2. Bootstrap method for non-linear associations
+```{r E2}
+lab11c <- read.table(file="lab11c.txt")
+plot(lab11c$v1, lab11c$v2, main="Scatterplot",
+   xlab="V1 ", ylab="V2 ")
+cor.test(lab11c$v1, lab11c$v2)
+indt(lab11c$v1, lab11c$v2) 
+```
+## Ans: As it can be seen from the scatterplot, The association between V1 and V2 is not linear. When V1 < 0, V2 is related to V1 negatively. But when V1 > 0, the pattern totally changed. This curvature affects the magnitude of Pearson’s correlation. So when using Pearson's product-moment correlation we cannot find a significant association. While indt() is based on the wild bootstrap method and this method is sensitive to any curvature. So when using indt() we can find a significant association. 
+\pagebreak  

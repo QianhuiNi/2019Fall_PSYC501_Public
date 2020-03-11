@@ -1,0 +1,252 @@
+---
+title: "PSYC501_Lab#10_RMD"
+author: "Qianhui Ni"
+date: "11/13/2019"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,eval = TRUE)
+```
+&nbsp;  
+
+# Introduction
+
+**This is Qianhui's assignment for PSYC501 Lab Section #10.**  
+Name: **Qianhui Ni**  
+Lab Section Number:**52662**  
+USC Student ID:**0000000**  
+  
+# Excercises  
+## 1).   
+Fit a simple linear regression model to the data, using IQ as a predictor of score. Do these results suggest that IQ is a valid predictor of score?  
+```{r E1}
+library(quantreg)
+library(psych)
+library(WRS)
+lab10hw <- read.csv(file="lab10hw.csv", header=TRUE)
+head(lab10hw)
+lab10hw.lm <- lm(score ~ iq , data = lab10hw)
+summary(lab10hw.lm)
+```
+## Ans: The results suggest that IQ cannot predict score significantly. Only 2.795% of the variance found in scores can be explained by IQ.  
+&nbsp;  
+\pagebreak  
+ 
+## 2).   
+Plot the data along with the corresponding regression line you have just calculated. Be sure to label the axes and give your graph a title.  
+```{r E2 Fig1, fig.height=10, fig.width=15}
+plot(x = lab10hw$iq , y = lab10hw$score , main = "Scatter plot of Scores vs.IQ", 
+     xlab="IQ", ylab="Scores in the test")
+abline(lab10hw.lm$coef , col = "red")
+lab10hw.lowess <- lowess(x = lab10hw$iq , y = lab10hw$score)
+lines(lab10hw.lowess , col = "blue")
+```
+&nbsp;  
+\pagebreak  
+
+## 3).   
+Check the assumptions of simple linear regression. Comment on any plots you generate or any statistical tests you perform.    
+```{r E3}
+#Linearity
+lab10hw.res <- residuals(lab10hw.lm)     
+lab10hw.pred <- predict(lab10hw.lm) 
+plot(x = lab10hw.pred , y = lab10hw.res , 
+     main = "Predicted values vs. Residuals" , pch = 3)
+abline(h = 0 , col = "red")
+lines(lowess(x = lab10hw.pred , y = lab10hw.res) , col = "blue" )
+#Normality
+describe(lab10hw.res)
+multi.hist(lab10hw.res)
+#use lm.daignose() function
+lm.diagnose = function(object, plot=TRUE){
+  installed = rownames(installed.packages())	
+  if("psych" %in% installed) require("psych") 
+  else {
+    cat("[Installing 'psych' for descriptive statistics]\n")
+    install.packages("psych", repos = "http://cran.cnr.Berkeley.edu")
+    require("psych")
+  }
+  if("nortest" %in% installed) require("nortest") 
+  else {
+    cat("[Installing 'nortest' for tests for normality]\n")
+    install.packages("nortest", repos = "http://cran.cnr.Berkeley.edu")
+    require("nortest")
+  }
+  if(class(object)=="formula") model=lm(object) 
+  else if(class(object)=="lm") model=object
+  else stop("A fitted lm model is required!") 
+  
+  model.res=residuals(model)
+  model.pred=predict(model)
+  
+  if(plot){
+    #Scatter plot of residuals against predicted values along with a lowess
+    par(mfrow=c(2,2), mar=c(4,4.5,3,1))
+    dens.y = hist(model.res, plot=F)$density
+    plot(x=model.pred, 
+         y=model.res, 
+         xlab="Predicted Values", 
+         ylab="Residuals",
+         main="Scatterplot of Residuals vs. Predicted",
+         cex.main=1,
+         pch=3
+    )
+    abline(h=0, col="red")
+    lines(lowess(x=model.pred, y=model.res))
+    
+    #Q-Q Plot
+    qqnorm(model.res, ylab="Residuals", cex.main=1)
+    qqline(model.res)
+    
+    #Histogram and normal curve
+    hist(model.res, 
+         freq=FALSE, 
+         ylim=range(dens.y, dnorm(mean(model.res), mean=mean(model.res), sd=sd(model.res))),
+         main="Histogram of Residuals and Normal Fit", 
+         cex.main=1,
+         xlab="Residuals",
+         ylab="Density"
+    )		 
+    curve(dnorm(x, mean=mean(model.res), sd=sd(model.res)), add=TRUE)
+    
+    #Boxplot
+    boxplot(model.res, main="Boxplot of Residuals", cex.main=1)
+  }		
+  cat("\n")
+  print(model$call)
+  
+  #Descriptives and normality tests
+  describe.stats=apply(t(describe(model.res)[,c(3,5,4,13,8:9,11,12)]), 2, round, 3)
+  colnames(describe.stats) = " "
+  #rownames(describe.stats)=" "
+  
+  normtests = list(shapiro.test(model.res), 
+                   lillie.test(model.res), 
+                   ad.test(model.res),
+                   cvm.test(model.res))
+  norm.stats = unlist(lapply(normtests, "[[", "statistic"))
+  norm.ps = unlist(lapply(normtests, "[[", "p.value"))
+  
+  cat("\nDescriptive Statistics of Residuals\n")
+  describe.output=data.frame(describe.stats, 
+                             row.names=paste("       ", rownames(describe.stats)))
+  colnames(describe.output) = " "
+  print(describe.output)
+  norm.rownames = c("Shapiro-Wilk","Kolmogorov-Smirnov","Anderson-Darling","Cramer-von Mises")
+  norm.results=data.frame(statistic=norm.stats, 
+                          p=norm.ps,
+                          row.names=norm.rownames
+  )
+  norm.output = data.frame(statistic=round(norm.stats, 4),
+                           p=format.pval(round(norm.ps, 4), 4),
+                           ifelse(norm.ps < 0.0001, "***",
+                                  ifelse(norm.ps < 0.001, "**",
+                                         ifelse(norm.ps < 0.01, "**",
+                                                ifelse(norm.ps < 0.05, "*",
+                                                       ifelse(norm.ps < 0.1, ".", " "))))),
+                           row.names=norm.rownames)
+  colnames(norm.output)[3] = c(" ")
+  output=list(Descriptives = describe.stats, NormalityTests = norm.results)
+  cat("\n\t\t\tTests for Normality\n")
+  print(norm.output)
+  cat("---\n.0001 '***' .001 '**' .01 '*' .05 '.' .1\n\n")
+  invisible(output)
+}
+
+lm.diagnose(lab10hw.lm)
+```
+## Ans:  
+## 3.1 Independence: There is only one score for each person.  
+## 3.2 Linearity: As it can be seen from the two graphs using raw data and residuals, for different predicted values, the residuals do not seem to be randomly placed. They are placed surrounding the left part of the line. There may be linearity if we only consider the left part, but the extremly small redidual on the right side skewed the distribution. So the association between IQ and scores may be non-linear.  
+## 3.3 Homoscedasticity: According to the residuals scatter plot, the varience of predicted values are not the same, which suggests homoscedasticity may not exist.  
+## 3.4 Normality: The results of describe() show that skew=-0.61, suggesting that this distribution is skewed. The graphs show that the distribution is not normal and we can see an obvious outlier. So it is not a normal distribution.  
+&nbsp;  
+\pagebreak  
+
+## 4).   
+Is simple linear regression appropriate for these data? Why, or why not? Use the results from the diagnostics you performed in the previous step to justify your answer.  
+
+## Ans: For these data, simple linear regression is not appropriate. Because the data do not meet the assumptions of linearity, Homoscedasticity or Normality. There are outliers in the data which can destroy the test.  
+&nbsp;  
+&nbsp;  
+&nbsp;  
+
+## 5).   
+Are there any leverage points? If so, how many are there, and what are their row numbers? Create a new dataset with all leverage points removed.  
+```{r E5}
+#Checking leverage points
+#leveragepoints <- out(lab10hw$iq)
+#Note: Everytime I ran out() in R markdown, it showed errors and I have tried a lot.
+#I can run out() in R studio, so I can only paste the results here: 
+```
+$n
+[1] 100
+$n.out
+[1] 5
+
+$out.val
+[1]  56.39709 253.44169 145.56140  62.34455 253.54844
+
+$out.id
+[1] 12 17 28 29 41  
+&nbsp;  
+```{r E5b}
+leveragepoints_id <- c(12, 17, 28, 29, 41)
+lab10hw2 <- lab10hw[-leveragepoints_id, ]
+```
+## Ans: Yes, there are 5 leverage points. Their row numbers are 12, 17, 28, 29, 41.  
+&nbsp;  
+&nbsp;  
+
+## 6).   
+Fit a simple linear regression model to your new dataset. Is IQ a useful predictor of score this time around?
+```{r E6}
+lab10hw2.lm <- lm(score ~ iq , data = lab10hw2)
+summary(lab10hw2.lm)
+```
+## Ans: Yes, now IQ is a useful predictor of scores. The p-value is smaller that 0.001 and 35.76% of the variance found in scores can be explained by IQ.  
+&nbsp;  
+
+## 7).   
+Plot the new dataset with the new corresponding regression line. Don’t forget to label your axes and title your plot.  
+```{r E7}
+plot(x = lab10hw2$iq , y = lab10hw2$score , 
+     main = "Scatter plot of Scores vs.IQ using new dataset", 
+     xlab="IQ", ylab="Scores in the test")
+abline(lab10hw2.lm$coef , col = "red")
+lab10hw2.lowess <- lowess(x = lab10hw2$iq , y = lab10hw2$score)
+lines(lab10hw2.lowess , col = "blue")
+```
+\pagebreak  
+
+## 8).   
+Check the assumptions of the new regression model, and comment on any plots or statistical tests you use to do so. Are the model assumptions met here? Explain.  
+```{r E8}
+lm.diagnose(lab10hw2.lm)
+```
+## Ans:  
+## 8.1 Independence: There is still only one score for each person.  
+## 8.2 Linearity: As it can be seen from the graphs, for different predicted values, the residuals are randomly placed. So the association between IQ and scores may be linear.  
+## 8.3 Homoscedasticity: According to the residuals scatter plot, residuals of predicted values are randomly scattered about the horizontal line of zero, which suggests homoscedasticity exists.  
+## 8.4 Normality: The graphs show that the distribution seems normal. The results of describe() show that skew=-0.237, suggesting that this distribution is approximately normal.   
+&nbsp;  
+&nbsp;  
+
+## 9).   
+Write your final regression equation using the sample estimates from your new regression model.  
+```{r E9}
+lsfit(lab10hw2$iq,lab10hw2$score)$coef
+```
+## Ans: Score = 1.1410 * IQ -11.9716
+&nbsp;  
+&nbsp;  
+&nbsp;  
+
+## 10).   
+Interpret the estimate of your slope in the context of the problem.  
+
+## Ans: The score of the test is positively related to IQ. The score of the test is expected to increase by 1.141 units on average per 1 unit increase in IQ. The y-intercept makes no sense in the context of this problem. Because people won't get 0 for their IQ and they cannot get a score smaller than 0. We can only say the x-intercept means the score is predicted to be 0 when IQ is 10.4922.

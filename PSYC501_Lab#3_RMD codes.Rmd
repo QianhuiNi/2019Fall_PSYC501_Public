@@ -1,0 +1,96 @@
+---
+title: "PSYC501_Lab#3_RMD"
+author: "Qianhui Ni"
+date: "9/28/2019"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,eval = TRUE)
+```
+&nbsp;  
+
+# Introduction
+
+**This is Qianhui's assignment for PSYC501 Lab Section #3.**  
+Name: **Qianhui Ni**  
+Lab Section Number:**52662**  
+USC Student ID:**000000000**  
+  
+# Excercises
+Let’s first create a population dataset by randomly sampling 20,000 values from a normal distribution that has a mean of 7 and a standard deviation of 2. Suppose this distribution represents the weights of ALL newborn babies in 2010. Hence, the mean population baby weight is 7 lbs, and the population SD is 2 lbs.  
+```{r E3}
+babyweight <- rnorm(20000, 7, 2)
+```
+## a. Plot the population using histogram.  
+```{r E3a}
+hist(babyweight,main="Hstogram of the weights of all newborn babies in 2010")
+```
+&nbsp;  
+
+## b. Conduct 200 rounds of sampling with each sample comprised of 500 babies’ weights using a loop.
+```{r E3b}
+m1 <- matrix(ncol=200,nrow=500)
+for(i in 1:200 ){         
+  m1[,i] <- sample(babyweight,500,replace=T)    
+}
+```
+&nbsp;  
+
+## c. Calculate the sample means, medians, and trimmed means for all 200 samples.
+```{r E3c}
+mean <- vector()
+tmean <- vector()
+median <- vector()
+for(k in 1:200 ){
+  mean[k] <- mean(m1[,k])
+  tmean[k] <- mean(m1[,k],trim=.2)
+  median[k] <- median(m1[,k])
+}
+head(mean,n=5)
+head(tmean,n=5)
+head(median,n=5)
+```
+&nbsp;  
+
+## d. Plot the sampling distributions of the mean, median and the trimmed mean.
+```{r E3d}
+dens.x <- c(density(mean)$x, density(tmean)$x, density(median)$x)
+dens.y <- c(density(mean)$y, density(tmean)$y, density(median)$y)
+
+plot(density(mean), xlim=range(dens.x), ylim=range(dens.y), 
+     col="darkgreen", main="Density plots of the weights of all newborn babies in 2010")
+lines(density(tmean), col="red") 
+lines(density(median), col="darkblue") 
+legend("topright", c("Sample means", "Sample tmeans", "Sample medians"),
+       col=c("darkgreen","red","darkblue"), lty=1)
+```
+&nbsp;  
+&nbsp;  
+
+## e. Calculate the standard errors of the sample mean, sample median and sample trimmed mean.
+```{r E3e}
+sd(mean)
+sd(median)
+sd(tmean)
+```
+&nbsp;  
+
+## g. Based on the results, when sampling from this distribution, which is the best location estimator – the mean, median, or trimmed mean? How does this pattern compare to the pattern we observed with the distribution used during lab? (Similar, or different?)
+
+```{r E3g}
+plot(density(mean), xlim=range(dens.x), ylim=range(dens.y), 
+     col="darkgreen", main="Density plots of the weights of all newborn babies in 2010")
+lines(density(tmean), col="red") 
+lines(density(median), col="darkblue") 
+abline(v=mean(babyweight),lwd=2,col="yellow")
+legend("topright", c("Sample means", "Sample tmeans", "Sample medians","Population"),
+       col=c("darkgreen","red","darkblue","yellow"), lty=1)
+```
+
+### Ans: when sampling from this distribution, mean is the best location estimator. Because mean has the smallest standard deviation.This pattern is similar to the pattern we observed with the distribution used during lab.  
+&nbsp;  
+&nbsp;  
